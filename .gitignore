@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+venv/
+
+# YOLO model weights (downloaded on first run, ~6MB)
+*.pt
+
+# pytest
+.pytest_cache/
+
+# Storage (images live on the SSD, not in the repo)
+/mnt/birdcam/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store

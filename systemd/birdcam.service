@@ -1,0 +1,28 @@
+[Unit]
+Description=BirdCam bird detection system
+After=network.target
+# Wait for the SSD to be mounted
+RequiresMountsFor=/mnt/birdcam
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/birdcam
+ExecStart=/home/pi/birdcam/venv/bin/birdcam --config /home/pi/birdcam/config.yaml
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Resource limits
+MemoryMax=2G
+CPUQuota=80%
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/mnt/birdcam
+
+[Install]
+WantedBy=multi-user.target

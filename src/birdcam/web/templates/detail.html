@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Detection #{{ d.id }} — BirdCam{% endblock %}
+
+{% block content %}
+<p style="margin-bottom: 1rem;">
+    <a href="/" class="btn btn-back">&#8592; Back to gallery</a>
+</p>
+
+<img class="detail-img" src="/images/{{ d.image_path }}" alt="Detection {{ d.id }}">
+
+<div class="detail-meta">
+    <dl>
+        <dt>Timestamp</dt>
+        <dd>{{ d.timestamp | timestamp }}</dd>
+
+        <dt>Confidence</dt>
+        <dd>{{ d.confidence | confidence }}</dd>
+
+        <dt>Bounding box</dt>
+        <dd>x1={{ "%.1f"|format(d.bbox[0]) }}, y1={{ "%.1f"|format(d.bbox[1]) }}, x2={{ "%.1f"|format(d.bbox[2]) }}, y2={{ "%.1f"|format(d.bbox[3]) }}</dd>
+
+        <dt>Image file</dt>
+        <dd><code>{{ d.image_path }}</code></dd>
+    </dl>
+
+    <form method="post" action="/detection/{{ d.id }}/favorite" style="display: inline;">
+        <button type="submit" class="btn btn-fav {% if d.favorite %}active{% endif %}">
+            {% if d.favorite %}&#9733; Favorited{% else %}&#9734; Favorite{% endif %}
+        </button>
+    </form>
+</div>
+
+{% if d.burst_paths %}
+<div class="detail-meta" style="margin-top: 1rem;">
+    <dt>Burst frames ({{ d.burst_paths|length }})</dt>
+    <div class="burst-grid">
+        {% for bp in d.burst_paths %}
+        <img src="/images/{{ bp }}" alt="Burst frame" loading="lazy">
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
