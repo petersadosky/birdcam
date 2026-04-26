@@ -57,9 +57,9 @@ def create_app(db: DetectionDB, storage: Storage) -> FastAPI:
         dates = db.get_dates()
 
         return templates.TemplateResponse(
-            "index.html",
-            {
-                "request": request,
+            request=request,
+            name="index.html",
+            context={
                 "detections": detections,
                 "page": page,
                 "total_pages": total_pages,
@@ -79,8 +79,9 @@ def create_app(db: DetectionDB, storage: Storage) -> FastAPI:
         if detection is None:
             return HTMLResponse("Not found", status_code=404)
         return templates.TemplateResponse(
-            "detail.html",
-            {"request": request, "d": detection},
+            request=request,
+            name="detail.html",
+            context={"d": detection},
         )
 
     @app.post("/detection/{detection_id}/favorite")
