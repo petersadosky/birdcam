@@ -19,7 +19,7 @@ sudo apt-get install -y -qq \
     python3-venv \
     python3-dev \
     python3-picamera2 \
-    libatlas-base-dev \
+    libatlas3-base \
     libjpeg-dev \
     libopenblas-dev \
     > /dev/null
