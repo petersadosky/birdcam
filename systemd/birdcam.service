@@ -25,6 +25,7 @@ Environment=YOLO_CONFIG_DIR=/mnt/birdcam/.ultralytics
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
+PrivateTmp=true
 ReadWritePaths=/mnt/birdcam
 
 [Install]
