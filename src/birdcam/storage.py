@@ -40,7 +40,7 @@ class Storage:
         ts = frame.timestamp
         dt = datetime.fromtimestamp(ts)
         date_str = dt.strftime("%Y-%m-%d")
-        time_str = dt.strftime("%H%M%S_%f")[:13]  # HHMMss_mmm
+        time_str = dt.strftime("%H%M%S_%f")  # HHMMSS_microseconds
 
         # Save main image
         img_dir = self._images_dir / date_str

@@ -59,7 +59,10 @@ fi
 
 # --- Install systemd service ---
 echo "[6/6] Installing systemd service..."
-sudo cp "$BIRDCAM_DIR/systemd/birdcam.service" /etc/systemd/system/
+sed -e "s|BIRDCAM_USER|$(whoami)|g" \
+    -e "s|BIRDCAM_DIR|$BIRDCAM_DIR|g" \
+    "$BIRDCAM_DIR/systemd/birdcam.service" \
+    | sudo tee /etc/systemd/system/birdcam.service > /dev/null
 sudo systemctl daemon-reload
 sudo systemctl enable birdcam.service
 echo "  Service installed and enabled."

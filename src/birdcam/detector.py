@@ -58,7 +58,17 @@ class Detector:
                 self._config.camera.resolution,
             )
 
+            frame_interval = 1.0 / self._config.camera.fps
+            next_frame_time = time.monotonic()
+
             while self._running:
+                # Throttle to configured FPS even if inference is fast
+                now = time.monotonic()
+                sleep_time = next_frame_time - now
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                next_frame_time = time.monotonic() + frame_interval
+
                 jpeg_data = self._capture_frame(camera)
                 if jpeg_data is None:
                     continue
@@ -89,8 +99,9 @@ class Detector:
 
         cam = Picamera2()
         w, h = self._config.camera.resolution
-        cam_config = cam.create_still_configuration(
+        cam_config = cam.create_video_configuration(
             main={"size": (w, h), "format": "RGB888"},
+            controls={"FrameRate": self._config.camera.fps},
         )
         cam.configure(cam_config)
         cam.start()

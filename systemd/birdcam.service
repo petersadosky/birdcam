@@ -6,9 +6,9 @@ RequiresMountsFor=/mnt/birdcam
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/birdcam
-ExecStart=/home/pi/birdcam/venv/bin/birdcam --config /home/pi/birdcam/config.yaml
+User=BIRDCAM_USER
+WorkingDirectory=BIRDCAM_DIR
+ExecStart=BIRDCAM_DIR/venv/bin/birdcam --config BIRDCAM_DIR/config.yaml
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
@@ -17,6 +17,9 @@ StandardError=journal
 # Resource limits
 MemoryMax=2G
 CPUQuota=80%
+
+# Ultralytics writes model cache to ~/.config/Ultralytics/
+Environment=YOLO_CONFIG_DIR=/mnt/birdcam/.ultralytics
 
 # Security hardening
 NoNewPrivileges=true
