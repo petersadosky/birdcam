@@ -45,7 +45,7 @@ def main():
     db = DetectionDB(config.storage.base_path / "birdcam.db")
     storage = Storage(config.storage, db)
     detector = Detector(config, storage)
-    app = create_app(db, storage)
+    app = create_app(db, storage, frame_buffer=detector.buffer)
 
     # Handle shutdown
     shutdown_event = threading.Event()

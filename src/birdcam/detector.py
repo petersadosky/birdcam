@@ -27,6 +27,7 @@ class Detector:
         max_frames = int(config.camera.fps * config.detection.buffer_seconds)
         self._buffer = FrameBuffer(max_frames=max(max_frames, 1))
 
+        self.buffer = self._buffer  # expose for MJPEG stream
         self._cooldown = config.detection.cooldown_seconds
         self._last_detection_time = 0.0
         self._threshold = config.detection.confidence_threshold

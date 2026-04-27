@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Live — BirdCam{% endblock %}
+
+{% block content %}
+<p style="margin-bottom: 1rem;">
+    <a href="/" class="btn btn-back">&#8592; Back to gallery</a>
+</p>
+
+<img src="/stream" alt="Live camera feed" style="width: 100%; max-width: 800px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+{% endblock %}

@@ -1,14 +1,16 @@
 """FastAPI web application for browsing bird detections."""
 
+import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, Query, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from birdcam.buffer import FrameBuffer
 from birdcam.db import DetectionDB
 from birdcam.storage import Storage
 
@@ -17,7 +19,7 @@ log = logging.getLogger(__name__)
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
-def create_app(db: DetectionDB, storage: Storage) -> FastAPI:
+def create_app(db: DetectionDB, storage: Storage, frame_buffer: FrameBuffer | None = None) -> FastAPI:
     app = FastAPI(title="BirdCam")
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
@@ -105,7 +107,35 @@ def create_app(db: DetectionDB, storage: Storage) -> FastAPI:
             return HTMLResponse("Not found", status_code=404)
         return FileResponse(full_path, media_type="image/jpeg")
 
-    # Serve thumbnail and burst images under the same /images/ prefix
-    # since paths stored in DB are relative to base_path
+    @app.get("/live", response_class=HTMLResponse)
+    async def live(request: Request):
+        return templates.TemplateResponse(
+            request=request,
+            name="live.html",
+            context={},
+        )
+
+    @app.get("/stream")
+    async def stream():
+        """MJPEG stream of live camera frames."""
+        if frame_buffer is None:
+            return HTMLResponse("No camera available", status_code=503)
+
+        async def generate():
+            while True:
+                frame = frame_buffer.latest()
+                if frame is not None:
+                    yield (
+                        b"--frame\r\n"
+                        b"Content-Type: image/jpeg\r\n\r\n"
+                        + frame.jpeg_data
+                        + b"\r\n"
+                    )
+                await asyncio.sleep(0.2)  # ~5 FPS
+
+        return StreamingResponse(
+            generate(),
+            media_type="multipart/x-mixed-replace; boundary=frame",
+        )
 
     return app

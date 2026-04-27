@@ -32,6 +32,11 @@ class FrameBuffer:
                 self._buf.pop(0)
         return frame
 
+    def latest(self) -> Frame | None:
+        """Return the most recent frame, or None if empty."""
+        with self._lock:
+            return self._buf[-1] if self._buf else None
+
     def snapshot(self) -> list[Frame]:
         """Return a copy of the current buffer contents (oldest first)."""
         with self._lock:
