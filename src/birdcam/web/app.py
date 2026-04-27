@@ -37,26 +37,12 @@ def create_app(db: DetectionDB, storage: Storage, frame_buffer: FrameBuffer | No
     async def index(
         request: Request,
         page: int = Query(1, ge=1),
-        min_confidence: float | None = Query(None, ge=0, le=1),
-        date: str | None = Query(None),
-        favorites: bool = Query(False),
     ):
         per_page = 24
         offset = (page - 1) * per_page
-        detections = db.list_detections(
-            limit=per_page,
-            offset=offset,
-            min_confidence=min_confidence,
-            date=date,
-            favorites_only=favorites,
-        )
-        total = db.count(
-            min_confidence=min_confidence,
-            date=date,
-            favorites_only=favorites,
-        )
+        detections = db.list_detections(limit=per_page, offset=offset)
+        total = db.count()
         total_pages = max(1, (total + per_page - 1) // per_page)
-        dates = db.get_dates()
 
         return templates.TemplateResponse(
             request=request,
@@ -66,12 +52,6 @@ def create_app(db: DetectionDB, storage: Storage, frame_buffer: FrameBuffer | No
                 "page": page,
                 "total_pages": total_pages,
                 "total": total,
-                "dates": dates,
-                "filters": {
-                    "min_confidence": min_confidence,
-                    "date": date,
-                    "favorites": favorites,
-                },
             },
         )
 
@@ -84,16 +64,6 @@ def create_app(db: DetectionDB, storage: Storage, frame_buffer: FrameBuffer | No
             request=request,
             name="detail.html",
             context={"d": detection},
-        )
-
-    @app.post("/detection/{detection_id}/favorite")
-    async def toggle_favorite(detection_id: int):
-        detection = db.get(detection_id)
-        if detection is None:
-            return HTMLResponse("Not found", status_code=404)
-        db.set_favorite(detection_id, not detection.favorite)
-        return RedirectResponse(
-            url=f"/detection/{detection_id}", status_code=303
         )
 
     @app.post("/detection/{detection_id}/delete")

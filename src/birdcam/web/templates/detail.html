@@ -23,13 +23,7 @@
         <dd><code>{{ d.image_path }}</code></dd>
     </dl>
 
-    <form method="post" action="/detection/{{ d.id }}/favorite" style="display: inline;">
-        <button type="submit" class="btn btn-fav {% if d.favorite %}active{% endif %}">
-            {% if d.favorite %}&#9733; Favorited{% else %}&#9734; Favorite{% endif %}
-        </button>
-    </form>
-
-    <form method="post" action="/detection/{{ d.id }}/delete" style="display: inline; margin-left: 0.5rem;"
+    <form method="post" action="/detection/{{ d.id }}/delete" style="display: inline;"
           onsubmit="return confirm('Delete this detection? This cannot be undone.')">
         <button type="submit" class="btn" style="background: #dc3545; color: white;">Delete</button>
     </form>
