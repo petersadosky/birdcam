@@ -102,7 +102,6 @@ class Detector:
         w, h = self._config.camera.resolution
         cam_config = cam.create_video_configuration(
             main={"size": (w, h), "format": "RGB888"},
-            controls={"FrameRate": self._config.camera.fps},
         )
         cam.configure(cam_config)
         cam.start()
