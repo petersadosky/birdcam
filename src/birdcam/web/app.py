@@ -96,6 +96,14 @@ def create_app(db: DetectionDB, storage: Storage, frame_buffer: FrameBuffer | No
             url=f"/detection/{detection_id}", status_code=303
         )
 
+    @app.post("/detection/{detection_id}/delete")
+    async def delete_detection(detection_id: int):
+        detection = db.get(detection_id)
+        if detection is None:
+            return HTMLResponse("Not found", status_code=404)
+        storage.delete_detection(detection_id)
+        return RedirectResponse(url="/", status_code=303)
+
     @app.get("/images/{path:path}")
     async def serve_image(path: str):
         """Serve images from the storage directory."""

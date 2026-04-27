@@ -131,6 +131,10 @@ class DetectionDB:
 
         return self._conn.execute(query, params).fetchone()[0]
 
+    def delete(self, detection_id: int) -> None:
+        self._conn.execute("DELETE FROM detections WHERE id = ?", (detection_id,))
+        self._conn.commit()
+
     def set_favorite(self, detection_id: int, favorite: bool) -> None:
         self._conn.execute(
             "UPDATE detections SET favorite = ? WHERE id = ?",

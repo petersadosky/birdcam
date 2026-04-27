@@ -28,6 +28,11 @@
             {% if d.favorite %}&#9733; Favorited{% else %}&#9734; Favorite{% endif %}
         </button>
     </form>
+
+    <form method="post" action="/detection/{{ d.id }}/delete" style="display: inline; margin-left: 0.5rem;"
+          onsubmit="return confirm('Delete this detection? This cannot be undone.')">
+        <button type="submit" class="btn" style="background: #dc3545; color: white;">Delete</button>
+    </form>
 </div>
 
 {% if d.burst_paths %}

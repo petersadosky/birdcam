@@ -82,6 +82,31 @@ class Storage:
         )
         return detection_id
 
+    def delete_detection(self, detection_id: int) -> None:
+        """Delete a detection and all its files (image, thumbnail, burst)."""
+        det = self._db.get(detection_id)
+        if det is None:
+            return
+
+        # Delete image and thumbnail
+        for rel_path in (det.image_path, det.thumbnail_path):
+            full = self._base / rel_path
+            if full.exists():
+                full.unlink()
+
+        # Delete burst frames
+        for bp in det.burst_paths:
+            full = self._base / bp
+            if full.exists():
+                full.unlink()
+            # Clean up empty burst directory
+            parent = full.parent
+            if parent.exists() and not any(parent.iterdir()):
+                parent.rmdir()
+
+        self._db.delete(detection_id)
+        log.info("Deleted detection #%d", detection_id)
+
     def prune_old_bursts(self) -> int:
         """Delete burst frames older than the configured retention period.
 
