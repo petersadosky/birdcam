@@ -1,6 +1,6 @@
 # BirdCam
 
-A bird detection camera system built on a Raspberry Pi 5. It watches a bird feeder with a Pi Camera Module 3, runs YOLOv8 to detect birds in real time, and saves timestamped photos with bounding boxes and confidence scores. A local web UI lets you browse, filter, and favorite detections.
+A bird detection camera system built on a Raspberry Pi 5. It watches a bird feeder with a Pi Camera Module 3, runs YOLOv8 to detect birds in real time, and saves timestamped photos with bounding boxes and confidence scores. A local web UI lets you browse and delete detections, and stream a live camera feed.
 
 ## How it works
 
@@ -27,11 +27,11 @@ Pi Camera → Frame Buffer → YOLOv8n → Storage (SSD + SQLite)
 | MicroSD, 64GB+, A2-rated | Samsung Pro Endurance or SanDisk High Endurance |
 | External SSD, 500GB+, USB 3.0 | SD cards die under continuous writes — images go on the SSD |
 | 27W USB-C power supply | Official Pi 5 PSU — don't use a phone charger |
-| Weatherproof enclosure | IP65 project box with camera port |
+| Weatherproof enclosure | ABS IP65 junction box, ~220x170x110mm |
 
 ## Setup
 
-### 1. Prepare the SSD
+### 1. Prepare the SSD (optional — works without one)
 
 ```bash
 # Find your SSD
@@ -48,11 +48,13 @@ sudo blkid /dev/sda1  # note the UUID
 sudo mount -a
 ```
 
+If no SSD is mounted, setup.sh creates `/mnt/birdcam` as a regular directory on the microSD card.
+
 ### 2. Clone and install
 
 ```bash
 cd ~
-git clone <your-repo-url> birdcam
+git clone https://github.com/petersadosky/birdcam.git
 cd birdcam
 ./scripts/setup.sh
 ```
@@ -67,10 +69,13 @@ sudo systemctl start birdcam
 
 The web UI will be at `http://<pi-ip>:8080`.
 
-### Logs
+### Useful commands
 
 ```bash
-journalctl -u birdcam -f
+journalctl -u birdcam -f            # view logs
+sudo systemctl stop birdcam         # stop
+sudo systemctl restart birdcam      # restart
+vcgencmd measure_temp               # check Pi temperature
 ```
 
 ## Configuration
@@ -91,7 +96,7 @@ detection:
 storage:
   base_path: /mnt/birdcam
   thumbnail_width: 320
-  prune_burst_after_days: 90   # burst frames auto-deleted after this; favorites exempt
+  prune_burst_after_days: 90   # burst frames auto-deleted after this
 
 web:
   host: 0.0.0.0
@@ -100,10 +105,9 @@ web:
 
 ## Web UI
 
-- **Gallery view** — grid of detection thumbnails, newest first
-- **Filters** — by date, minimum confidence, favorites only
-- **Detail view** — full-resolution image, bounding box coordinates, burst frames
-- **Favorites** — mark detections to protect them from burst pruning
+- **Gallery** — grid of detection thumbnails, newest first, auto-refreshes every 30 seconds
+- **Detail view** — full-resolution image, bounding box coordinates, burst frames, delete button
+- **Live view** — real-time MJPEG stream from the camera
 
 ## Development
 
@@ -116,11 +120,7 @@ python3 -m venv .venv
 
 ## Roadmap
 
-- [x] **Phase 1** — Pi Camera detection + web UI (current)
+- [x] **Phase 1** — Pi Camera detection + web UI
 - [ ] **Phase 2** — Sony a6100 integration for high-res captures via gphoto2
 - [ ] **Phase 3** — Species identification + visit grouping
 - [ ] **Phase 4** — Squirrel filtering, day/night handling, cloud backup
-
-## License
-
-Personal project. No license yet.
