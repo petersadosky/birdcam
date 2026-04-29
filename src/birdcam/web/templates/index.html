@@ -50,4 +50,8 @@
     No detections yet. Point the camera at a bird feeder and wait!
 </div>
 {% endif %}
+
+{% if not classifier_status.ok %}
+<div class="api-warning">{{ classifier_status.message }}</div>
+{% endif %}
 {% endblock %}

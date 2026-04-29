@@ -47,7 +47,7 @@ def main():
     storage = Storage(config.storage, db)
     classifier = Classifier(config.classifier, db)
     detector = Detector(config, storage, classifier)
-    app = create_app(db, storage, frame_buffer=detector.buffer)
+    app = create_app(db, storage, frame_buffer=detector.buffer, classifier=classifier)
 
     # Handle shutdown
     shutdown_event = threading.Event()

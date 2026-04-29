@@ -22,6 +22,7 @@ class Classifier:
         self._config = config
         self._db = db
         self._client: anthropic.Anthropic | None = None
+        self._error: str | None = None
 
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
@@ -29,6 +30,7 @@ class Classifier:
                 "ANTHROPIC_API_KEY not set — species classification disabled"
             )
             self._enabled = False
+            self._error = "API key not configured"
         else:
             self._client = anthropic.Anthropic(api_key=api_key)
             self._enabled = config.enabled
@@ -41,6 +43,17 @@ class Classifier:
     @property
     def enabled(self) -> bool:
         return self._enabled
+
+    @property
+    def status(self) -> dict:
+        """Return classifier status for the web UI."""
+        if not self._enabled and self._error:
+            return {"ok": False, "message": self._error}
+        today = self._db.classifications_today()
+        limit = self._config.max_requests_per_day
+        if today >= limit:
+            return {"ok": False, "message": f"Daily limit reached ({today}/{limit})"}
+        return {"ok": True, "message": None}
 
     def classify(self, detection_id: int, jpeg_data: bytes) -> str | None:
         """Classify a bird detection. Returns species name or None if skipped."""
@@ -85,8 +98,44 @@ class Classifier:
 
             species = message.content[0].text.strip()
             self._db.set_species(detection_id, species)
+
+            # Clear any previous error on success
+            self._error = None
+
             log.info("Detection #%d classified as: %s", detection_id, species)
             return species
+
+        except anthropic.AuthenticationError:
+            self._error = "Invalid API key"
+            self._enabled = False
+            log.error("Invalid API key — classifier disabled")
+            return None
+
+        except anthropic.PermissionDeniedError:
+            self._error = "API access denied — check your Anthropic account"
+            self._enabled = False
+            log.error("Permission denied — classifier disabled")
+            return None
+
+        except anthropic.RateLimitError:
+            self._error = "Rate limited — will retry on next detection"
+            log.warning("Rate limited by Anthropic API")
+            return None
+
+        except anthropic.APIStatusError as e:
+            if e.status_code == 402 or "billing" in str(e).lower() or "funds" in str(e).lower():
+                self._error = "Anthropic account out of funds — add credits at console.anthropic.com"
+                self._enabled = False
+                log.error("Out of funds — classifier disabled")
+            else:
+                self._error = f"API error (HTTP {e.status_code})"
+                log.error("API error: %s", e)
+            return None
+
+        except anthropic.APIConnectionError:
+            self._error = "Cannot reach Anthropic API — check internet connection"
+            log.warning("Connection error to Anthropic API")
+            return None
 
         except Exception:
             log.exception("Classification failed for detection #%d", detection_id)

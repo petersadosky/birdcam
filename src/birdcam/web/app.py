@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from birdcam.buffer import FrameBuffer
+from birdcam.classifier import Classifier
 from birdcam.db import DetectionDB
 from birdcam.storage import Storage
 
@@ -19,7 +20,7 @@ log = logging.getLogger(__name__)
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
-def create_app(db: DetectionDB, storage: Storage, frame_buffer: FrameBuffer | None = None) -> FastAPI:
+def create_app(db: DetectionDB, storage: Storage, frame_buffer: FrameBuffer | None = None, classifier: Classifier | None = None) -> FastAPI:
     app = FastAPI(title="BirdCam")
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
@@ -44,6 +45,8 @@ def create_app(db: DetectionDB, storage: Storage, frame_buffer: FrameBuffer | No
         total = db.count()
         total_pages = max(1, (total + per_page - 1) // per_page)
 
+        classifier_status = classifier.status if classifier else {"ok": True, "message": None}
+
         return templates.TemplateResponse(
             request=request,
             name="index.html",
@@ -52,6 +55,7 @@ def create_app(db: DetectionDB, storage: Storage, frame_buffer: FrameBuffer | No
                 "page": page,
                 "total_pages": total_pages,
                 "total": total,
+                "classifier_status": classifier_status,
             },
         )
 
