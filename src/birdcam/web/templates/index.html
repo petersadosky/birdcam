@@ -14,9 +14,9 @@
         <a href="/detection/{{ d.id }}">
             <img src="/images/{{ d.thumbnail_path }}" alt="Detection {{ d.id }}" loading="lazy">
             <div class="meta">
-                <span class="time">{{ d.timestamp | timestamp }}</span>
+                <span class="species">{{ d.species or "Unknown" }}</span>
                 <span class="conf">{{ d.confidence | confidence }}</span>
-                {% if d.species %}<br><span class="species">{{ d.species }}</span>{% endif %}
+                <br><span class="time">{{ d.timestamp | timestamp }}</span>
             </div>
         </a>
     </div>
