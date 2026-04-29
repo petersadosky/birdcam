@@ -16,6 +16,7 @@
             <div class="meta">
                 <span class="time">{{ d.timestamp | timestamp }}</span>
                 <span class="conf">{{ d.confidence | confidence }}</span>
+                {% if d.species %}<br><span class="species">{{ d.species }}</span>{% endif %}
             </div>
         </a>
     </div>

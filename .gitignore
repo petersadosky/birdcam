@@ -18,6 +18,9 @@ venv/
 # Storage (images live on the SSD, not in the repo)
 /mnt/birdcam/
 
+# Secrets
+.env
+
 # IDE
 .vscode/
 .idea/

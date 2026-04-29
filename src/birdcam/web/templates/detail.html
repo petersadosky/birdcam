@@ -16,6 +16,11 @@
         <dt>Confidence</dt>
         <dd>{{ d.confidence | confidence }}</dd>
 
+        {% if d.species %}
+        <dt>Species</dt>
+        <dd>{{ d.species }}</dd>
+        {% endif %}
+
         <dt>Bounding box</dt>
         <dd>x1={{ "%.1f"|format(d.bbox[0]) }}, y1={{ "%.1f"|format(d.bbox[1]) }}, x2={{ "%.1f"|format(d.bbox[2]) }}, y2={{ "%.1f"|format(d.bbox[3]) }}</dd>
 

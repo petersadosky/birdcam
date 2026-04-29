@@ -6,6 +6,7 @@ import threading
 import time
 
 from birdcam.buffer import FrameBuffer
+from birdcam.classifier import Classifier
 from birdcam.config import Config
 from birdcam.storage import Storage
 
@@ -18,9 +19,10 @@ BIRD_CLASS_ID = 14
 class Detector:
     """Captures frames from the Pi Camera, runs YOLO inference, saves detections."""
 
-    def __init__(self, config: Config, storage: Storage):
+    def __init__(self, config: Config, storage: Storage, classifier: Classifier):
         self._config = config
         self._storage = storage
+        self._classifier = classifier
         self._running = False
         self._thread: threading.Thread | None = None
 
@@ -80,12 +82,13 @@ class Detector:
                 if detections and self._cooldown_elapsed():
                     best = max(detections, key=lambda d: d["confidence"])
                     burst = self._buffer.snapshot()
-                    self._storage.save_detection(
+                    detection_id = self._storage.save_detection(
                         frame=frame,
                         confidence=best["confidence"],
                         bbox=best["bbox"],
                         burst_frames=burst,
                     )
+                    self._classifier.classify(detection_id, frame.jpeg_data)
                     self._last_detection_time = time.time()
 
         except Exception:

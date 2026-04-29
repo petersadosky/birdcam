@@ -20,6 +20,7 @@ CPUQuota=80%
 
 # Ultralytics writes model cache to ~/.config/Ultralytics/
 Environment=YOLO_CONFIG_DIR=/mnt/birdcam/.ultralytics
+EnvironmentFile=-BIRDCAM_DIR/.env
 
 # Security hardening
 NoNewPrivileges=true

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import uvicorn
 
+from birdcam.classifier import Classifier
 from birdcam.config import load_config
 from birdcam.db import DetectionDB
 from birdcam.detector import Detector
@@ -44,7 +45,8 @@ def main():
     # Initialize components
     db = DetectionDB(config.storage.base_path / "birdcam.db")
     storage = Storage(config.storage, db)
-    detector = Detector(config, storage)
+    classifier = Classifier(config.classifier, db)
+    detector = Detector(config, storage, classifier)
     app = create_app(db, storage, frame_buffer=detector.buffer)
 
     # Handle shutdown

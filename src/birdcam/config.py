@@ -28,6 +28,13 @@ class StorageConfig:
 
 
 @dataclass
+class ClassifierConfig:
+    enabled: bool = True
+    max_requests_per_day: int = 200
+    model: str = "claude-haiku-4-5-20251001"
+
+
+@dataclass
 class WebConfig:
     host: str = "0.0.0.0"
     port: int = 8080
@@ -38,6 +45,7 @@ class Config:
     camera: CameraConfig = field(default_factory=CameraConfig)
     detection: DetectionConfig = field(default_factory=DetectionConfig)
     storage: StorageConfig = field(default_factory=StorageConfig)
+    classifier: ClassifierConfig = field(default_factory=ClassifierConfig)
     web: WebConfig = field(default_factory=WebConfig)
 
 
@@ -79,6 +87,15 @@ def load_config(path: Path | None = None) -> Config:
             cfg.storage.thumbnail_width = s["thumbnail_width"]
         if "prune_burst_after_days" in s:
             cfg.storage.prune_burst_after_days = s["prune_burst_after_days"]
+
+    if "classifier" in raw:
+        cl = raw["classifier"]
+        if "enabled" in cl:
+            cfg.classifier.enabled = cl["enabled"]
+        if "max_requests_per_day" in cl:
+            cfg.classifier.max_requests_per_day = cl["max_requests_per_day"]
+        if "model" in cl:
+            cfg.classifier.model = cl["model"]
 
     if "web" in raw:
         w = raw["web"]

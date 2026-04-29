@@ -18,12 +18,17 @@ CREATE TABLE IF NOT EXISTS detections (
     thumbnail_path TEXT NOT NULL,
     burst_paths TEXT NOT NULL DEFAULT '[]',
     favorite INTEGER NOT NULL DEFAULT 0,
+    species TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_detections_timestamp ON detections(timestamp);
 CREATE INDEX IF NOT EXISTS idx_detections_confidence ON detections(confidence);
 """
+
+MIGRATIONS = [
+    "ALTER TABLE detections ADD COLUMN species TEXT",
+]
 
 
 @dataclass
@@ -36,6 +41,7 @@ class Detection:
     thumbnail_path: str
     burst_paths: list[str]
     favorite: bool
+    species: str | None
 
 
 class DetectionDB:
@@ -46,6 +52,16 @@ class DetectionDB:
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.executescript(SCHEMA)
+        self._migrate()
+
+    def _migrate(self):
+        """Run schema migrations that haven't been applied yet."""
+        for sql in MIGRATIONS:
+            try:
+                self._conn.execute(sql)
+                self._conn.commit()
+            except sqlite3.OperationalError:
+                pass  # already applied
 
     def insert(
         self,
@@ -131,6 +147,27 @@ class DetectionDB:
 
         return self._conn.execute(query, params).fetchone()[0]
 
+    def set_species(self, detection_id: int, species: str) -> None:
+        self._conn.execute(
+            "UPDATE detections SET species = ? WHERE id = ?",
+            (species, detection_id),
+        )
+        self._conn.commit()
+
+    def classifications_today(self) -> int:
+        """Count how many detections were classified today."""
+        import time
+        from datetime import datetime
+
+        today = datetime.now().strftime("%Y-%m-%d")
+        row = self._conn.execute(
+            """SELECT COUNT(*) FROM detections
+               WHERE species IS NOT NULL
+               AND date(timestamp, 'unixepoch', 'localtime') = ?""",
+            (today,),
+        ).fetchone()
+        return row[0]
+
     def delete(self, detection_id: int) -> None:
         self._conn.execute("DELETE FROM detections WHERE id = ?", (detection_id,))
         self._conn.commit()
@@ -183,4 +220,5 @@ class DetectionDB:
             thumbnail_path=row["thumbnail_path"],
             burst_paths=json.loads(row["burst_paths"]),
             favorite=bool(row["favorite"]),
+            species=row["species"],
         )
