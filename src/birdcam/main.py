@@ -9,6 +9,7 @@ from pathlib import Path
 
 import uvicorn
 
+from birdcam.backfill import Backfiller
 from birdcam.classifier import Classifier
 from birdcam.config import load_config
 from birdcam.db import DetectionDB
@@ -47,6 +48,7 @@ def main():
     storage = Storage(config.storage, db)
     classifier = Classifier(config.classifier, db)
     detector = Detector(config, storage, classifier)
+    backfiller = Backfiller(classifier, db, storage)
     app = create_app(db, storage, frame_buffer=detector.buffer, classifier=classifier)
 
     # Handle shutdown
@@ -61,6 +63,7 @@ def main():
 
     # Start detector
     detector.start()
+    backfiller.start()
 
     # Schedule daily burst pruning
     def prune_loop():
@@ -86,6 +89,7 @@ def main():
     finally:
         log.info("Shutting down detector...")
         shutdown_event.set()
+        backfiller.stop()
         detector.stop()
         db.close()
         log.info("BirdCam stopped")

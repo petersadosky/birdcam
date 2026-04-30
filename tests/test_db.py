@@ -105,6 +105,21 @@ def test_get_dates(db):
     assert dates[0] > dates[1]
 
 
+def test_classifications_today_uses_classified_at(db):
+    now = time.time()
+    yesterday = now - 86400
+    # Live classification today
+    today_id = db.insert(now, 0.9, (0, 0, 1, 1), "a.jpg", "a_t.jpg")
+    db.set_species(today_id, "Robin")
+    # Backfilled classification of an old detection — happens "now", so counts
+    backfill_id = db.insert(yesterday, 0.9, (0, 0, 1, 1), "b.jpg", "b_t.jpg")
+    db.set_species(backfill_id, "Sparrow")
+    # Old detection, never classified — should not count
+    db.insert(yesterday, 0.9, (0, 0, 1, 1), "c.jpg", "c_t.jpg")
+
+    assert db.classifications_today() == 2
+
+
 def test_pagination(db):
     now = time.time()
     for i in range(10):

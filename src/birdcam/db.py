@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS detections (
     burst_paths TEXT NOT NULL DEFAULT '[]',
     favorite INTEGER NOT NULL DEFAULT 0,
     species TEXT,
+    classified_at TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -28,6 +29,7 @@ CREATE INDEX IF NOT EXISTS idx_detections_confidence ON detections(confidence);
 
 MIGRATIONS = [
     "ALTER TABLE detections ADD COLUMN species TEXT",
+    "ALTER TABLE detections ADD COLUMN classified_at TEXT",
 ]
 
 
@@ -149,24 +151,38 @@ class DetectionDB:
 
     def set_species(self, detection_id: int, species: str) -> None:
         self._conn.execute(
-            "UPDATE detections SET species = ? WHERE id = ?",
+            "UPDATE detections SET species = ?, classified_at = datetime('now') WHERE id = ?",
             (species, detection_id),
         )
         self._conn.commit()
 
     def classifications_today(self) -> int:
-        """Count how many detections were classified today."""
-        import time
+        """Count API classifications made today (local time).
+
+        Tracks when the API call happened (`classified_at`), not the detection
+        timestamp — so backfilling old detections still counts against the
+        per-day budget.
+        """
         from datetime import datetime
 
         today = datetime.now().strftime("%Y-%m-%d")
         row = self._conn.execute(
             """SELECT COUNT(*) FROM detections
-               WHERE species IS NOT NULL
-               AND date(timestamp, 'unixepoch', 'localtime') = ?""",
+               WHERE classified_at IS NOT NULL
+               AND date(classified_at, 'localtime') = ?""",
             (today,),
         ).fetchone()
         return row[0]
+
+    def get_unclassified(self, limit: int = 50) -> list[Detection]:
+        """Return detections with no species label, oldest first."""
+        rows = self._conn.execute(
+            """SELECT * FROM detections
+               WHERE species IS NULL
+               ORDER BY timestamp ASC LIMIT ?""",
+            (limit,),
+        ).fetchall()
+        return [self._row_to_detection(r) for r in rows]
 
     def delete(self, detection_id: int) -> None:
         self._conn.execute("DELETE FROM detections WHERE id = ?", (detection_id,))
