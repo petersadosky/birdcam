@@ -6,7 +6,7 @@ Bird detection camera system for Raspberry Pi 5 + Pi Camera Module 3.
 
 **Phase 1 (MVP) — running on Pi, pending 24-hour validation.**
 
-Pi 5 is set up (hostname: `bird`, user: `peter`), camera connected, BirdCam running as a systemd service. SSD not yet installed (using microSD for now). Weatherproof enclosure not yet assembled.
+Pi 5 is set up (hostname: `bird`, user: `peter`), camera connected, BirdCam running as a systemd service with storage on SSD mounted at `/mnt/birdcam`. Weatherproof enclosure not yet assembled.
 
 ### Phase 1 done-criteria
 
