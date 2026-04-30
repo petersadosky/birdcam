@@ -16,7 +16,7 @@ Runs 24 hours unattended. Browsable web UI with timestamped detections, thumbnai
 
 1. **Phase 1 — MVP, Pi Camera only** (current)
 2. **Phase 2 — Sony a6100 integration** — gphoto2, USB, no soldering
-3. **Phase 3 — Species ID** — species classifier, visit grouping with cooldown
+3. **Phase 3 — Species ID** — Claude API classifier done; visit grouping with cooldown remaining
 4. **Phase 4 — Polish** — squirrel filtering, day/night, storage management, cloud backup
 
 ## Development
@@ -25,10 +25,11 @@ Runs 24 hours unattended. Browsable web UI with timestamped detections, thumbnai
 # macOS (no picamera2)
 python3 -m venv .venv
 .venv/bin/pip install -e ".[dev]"
-.venv/bin/python -m pytest tests/ -v
+PYTHONPATH=src .venv/bin/python -m pytest tests/ -v
 
-# After editing files, re-run `pip install -e ".[dev]"` — Python 3.14
-# editable installs go stale on file changes.
+# Python 3.14 skips __editable__*.pth files as "hidden" (verify with
+# `python -v -c pass`), so `pip install -e` does not actually put the
+# package on sys.path — set PYTHONPATH=src for tests and ad-hoc imports.
 
 # On the Pi
 cd ~/birdcam && git pull && sudo systemctl restart birdcam
@@ -46,6 +47,9 @@ journalctl -u birdcam -f
 - Service file uses placeholders (`BIRDCAM_USER`, `BIRDCAM_DIR`) templated by `setup.sh`
 - Jinja2 TemplateResponse must use keyword args (`request=`, `name=`, `context=`) for Bookworm compatibility
 - Web UI: no filtering/favorites (removed for simplicity), has delete, live MJPEG stream, 30s auto-refresh
+- Species classification via Claude API (Haiku); per-day spend capped by `classifier.max_requests_per_day`
+- `classified_at` column tracks when the API call happened (not the detection timestamp), so the daily cap applies to backfill too
+- Backfiller daemon thread drains unclassified detections; classifier returning `None` (offline / rate-limited / billing) is the back-off signal — when Wi-Fi returns the queue drains on its own
 
 ## Gotchas found during Pi setup
 
